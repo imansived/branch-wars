@@ -90,5 +90,4 @@ src/
 
 ## License
 
-Personal/educational project. No license specified — add one if you plan to
-share or accept contributions.
+Personal/educational project.
