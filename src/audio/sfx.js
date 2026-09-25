@@ -159,6 +159,14 @@ export const SFX = {
     noise({ attack:0.002, release:0.045, peak:0.05, hpFreq:2600, lpFreq:9000 });
   },
 
+  // Swiping into a wall (no tiles actually move) previously made zero sound —
+  // silent on both success and failure feels broken on a touch device where
+  // there's no other confirmation the tap registered. Deliberately duller and
+  // drier than move() so it reads as "nothing happened", not as an action.
+  blocked(){
+    tone({ freq:180, type:"sine", peak:0.10, attack:0.002, decay:0.03, sustain:0.15, release:0.05, rev:0 });
+  },
+
   // Deep thud/boom that grows satisfyingly with each tier.
   // Mech (1) = low 55Hz sub thud, felt more than heard.
   // CS (8) = full ~195Hz chest-hitting boom with harmonic weight.

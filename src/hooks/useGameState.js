@@ -183,7 +183,7 @@ export function useGameState(){
   const handleMove = useCallback((dir) => {
     if(gameState !== "playing") return;
     const { grid: ng, score: gained, moved, merged } = moveGrid(grid, dir);
-    if(!moved) return;
+    if(!moved){ playSfx("blocked"); return; }
     setHintDir(null);
     clearTimeout(hintTimeout.current);
     playSfx("move");
@@ -233,11 +233,11 @@ export function useGameState(){
 
   const requestHint = useCallback(() => {
     if(gameState !== "playing") return;
+    playSfx("click"); // confirm the tap immediately, even if no move ends up suggested
     setAiThinking(true);
     const dir = getBestMove(grid);
     setAiThinking(false);
     if(!dir) return;
-    playSfx("click");
     setHintDir(dir);
     clearTimeout(hintTimeout.current);
     hintTimeout.current = setTimeout(() => setHintDir(null), HINT_DISPLAY_MS);
