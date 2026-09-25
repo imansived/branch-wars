@@ -66,6 +66,12 @@ export function useGameState(){
     if(!mutedRef.current) SFX[name]?.(...args);
   }, []);
 
+  // Haptic feedback for touch devices — a no-op wherever the Vibration API
+  // isn't supported (desktop, iOS Safari), so it's safe to call unconditionally.
+  const haptic = useCallback((pattern) => {
+    if(!mutedRef.current && typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(pattern);
+  }, []);
+
   const toggleMute = useCallback(() => {
     setMuted(prev => {
       const next = !prev;
@@ -153,6 +159,7 @@ export function useGameState(){
       setGameState("playing");
       setKtUsed(true);
       playSfx("backlog");
+      haptic([20, 30, 20]);
       setKtToast(true);
       setTimeout(() => setKtToast(false), 3200);
       return;
@@ -167,10 +174,11 @@ export function useGameState(){
       setHasSnapshot(false);
       setKtUsed(true);
       playSfx("backlog");
+      haptic([20, 30, 20]);
       setKtToast(true);
       setTimeout(() => setKtToast(false), 3200);
     }
-  }, [ktUsed, gameState, playSfx]);
+  }, [ktUsed, gameState, playSfx, haptic]);
 
   const handleMove = useCallback((dir) => {
     if(gameState !== "playing") return;
@@ -179,7 +187,8 @@ export function useGameState(){
     setHintDir(null);
     clearTimeout(hintTimeout.current);
     playSfx("move");
-    if(merged.length) playSfx("merge", Math.max(...merged));
+    if(merged.length){ playSfx("merge", Math.max(...merged)); haptic(merged.length > 1 ? [12, 30, 12] : 14); }
+    else haptic(6);
 
     // snapshot BEFORE this move resolves, so KT can fully undo it
     lastSnapshot.current = { grid, score, highestValue };
@@ -215,7 +224,7 @@ export function useGameState(){
       nextEventAt.current = randomEventInterval();
       setTimeout(() => triggerCollegeEvent(highest), 250);
     }
-  }, [grid, gameState, best, highestValue, score, addPopup, triggerCollegeEvent, playSfx]);
+  }, [grid, gameState, best, highestValue, score, addPopup, triggerCollegeEvent, playSfx, haptic]);
 
   // Keep refs in sync so the autoplay interval always reads the latest grid
   // and move handler without needing to tear the interval down every move.
@@ -267,11 +276,11 @@ export function useGameState(){
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [handleMove]);
 
-  useEffect(() => { if(showCSBanner) playSfx("csUnlock"); }, [showCSBanner, playSfx]);
+  useEffect(() => { if(showCSBanner){ playSfx("csUnlock"); haptic([15, 40, 15, 40, 60]); } }, [showCSBanner, playSfx, haptic]);
   useEffect(() => {
-    if(gameState === "won") playSfx("win");
-    else if(gameState === "over") playSfx("gameOver");
-  }, [gameState, playSfx]);
+    if(gameState === "won"){ playSfx("win"); haptic([40, 60, 40, 60, 90]); }
+    else if(gameState === "over"){ playSfx("gameOver"); haptic([60, 40, 60]); }
+  }, [gameState, playSfx, haptic]);
 
   const onTouchStart = useCallback((e) => {
     const t = e.touches[0];

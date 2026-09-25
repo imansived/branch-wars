@@ -15,8 +15,8 @@ export default function FrontPage({ onStart }){
   useEffect(() => { setTimeout(() => setVisible(true), 80); }, []);
 
   return (
-    <div style={{
-      minHeight:"100vh", width:"100%", background:"#C8A96E",
+    <div className="app-shell" style={{
+      width:"100%", background:"#C8A96E",
       backgroundImage:"radial-gradient(ellipse at 50% 40%,rgba(255,240,200,0.3),transparent 65%),repeating-linear-gradient(45deg,rgba(0,0,0,0.012) 0px,rgba(0,0,0,0.012) 1px,transparent 1px,transparent 10px)",
       display:"flex", alignItems:"center", justifyContent:"center", padding:"20px 16px",
       fontFamily:"'DM Sans',sans-serif",

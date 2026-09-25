@@ -45,10 +45,11 @@ export default function App(){
       </div>
 
       <div
+        className="app-shell"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
         style={{
-          minHeight:"100vh", background:"#F7F1E1",
+          background:"#F7F1E1",
           backgroundImage:`
             linear-gradient(rgba(120,150,190,0.14) 1px,transparent 1px),
             linear-gradient(90deg,rgba(120,150,190,0.14) 1px,transparent 1px),
@@ -59,6 +60,7 @@ export default function App(){
           display:"flex", alignItems:"center", justifyContent:"center",
           padding:"32px 24px 32px 56px", fontFamily:"'DM Sans',sans-serif",
           userSelect:"none", position:"relative",
+          touchAction:"none", WebkitTapHighlightColor:"transparent",
         }}
       >
         <div style={{ width:gridW, maxWidth:"calc(100vw - 80px)", position:"relative", zIndex:1 }}>
