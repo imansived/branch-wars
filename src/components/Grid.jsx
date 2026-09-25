@@ -1,8 +1,9 @@
 import Tile from "./Tile";
 import CollisionPopup from "./CollisionPopup";
+import AIHint from "./AIHint";
 import { SIZE } from "../game/gridLogic";
 
-export default function Grid({ grid, tileSize, gap, popups, shaking }){
+export default function Grid({ grid, tileSize, gap, popups, shaking, hintDir }){
   const W = tileSize * SIZE + gap * (SIZE + 1);
 
   return (
@@ -11,6 +12,7 @@ export default function Grid({ grid, tileSize, gap, popups, shaking }){
       boxShadow:"0 10px 36px rgba(0,0,0,0.16), 0 3px 10px rgba(0,0,0,0.10)",
       animation: shaking ? "vivaShake 0.5s ease-in-out" : "none",
     }}>
+      <AIHint dir={hintDir}/>
       <div style={{
         position:"relative", width:W, height:W,
         background:"linear-gradient(145deg,#F5F1E4,#EAE3D0)",

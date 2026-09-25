@@ -5,10 +5,13 @@ import { COLLEGE_EVENTS } from "../data/flavorText";
 import { BRANCH_MAP } from "../data/branches";
 import { pickRandom } from "../utils/helpers";
 import { SFX, unlockAudio } from "../audio/sfx";
+import { getBestMove } from "../ai/solver";
 
 const GAP = 8;
 const EVENT_INTERVAL_MIN = 25;
 const EVENT_INTERVAL_RANGE = 16; // fires every 25-40 moves
+const AI_AUTOPLAY_INTERVAL_MS = 220;
+const HINT_DISPLAY_MS = 1800;
 
 function randomEventInterval(){
   return EVENT_INTERVAL_MIN + Math.floor(Math.random() * EVENT_INTERVAL_RANGE);
@@ -42,6 +45,9 @@ export function useGameState(){
   const [ktToast, setKtToast] = useState(false);
   const [muted, setMuted] = useState(false);
   const [hasSnapshot, setHasSnapshot] = useState(false);
+  const [hintDir, setHintDir] = useState(null);
+  const [aiAutoPlay, setAiAutoPlay] = useState(false);
+  const [aiThinking, setAiThinking] = useState(false);
 
   const mutedRef = useRef(false);
   const lastSnapshot = useRef(null); // { grid, score, highestValue } before the most recent move
@@ -49,6 +55,9 @@ export function useGameState(){
   const touchStart = useRef(null);
   const moveCount = useRef(0);
   const nextEventAt = useRef(randomEventInterval());
+  const hintTimeout = useRef(null);
+  const gridRef = useRef(grid);
+  const handleMoveRef = useRef(null);
 
   const [TILE, setTILE] = useState(computeTileSize);
   const gridW = TILE * SIZE + GAP * (SIZE + 1);
@@ -167,6 +176,8 @@ export function useGameState(){
     if(gameState !== "playing") return;
     const { grid: ng, score: gained, moved, merged } = moveGrid(grid, dir);
     if(!moved) return;
+    setHintDir(null);
+    clearTimeout(hintTimeout.current);
     playSfx("move");
     if(merged.length) playSfx("merge", Math.max(...merged));
 
@@ -205,6 +216,47 @@ export function useGameState(){
       setTimeout(() => triggerCollegeEvent(highest), 250);
     }
   }, [grid, gameState, best, highestValue, score, addPopup, triggerCollegeEvent, playSfx]);
+
+  // Keep refs in sync so the autoplay interval always reads the latest grid
+  // and move handler without needing to tear the interval down every move.
+  useEffect(() => { gridRef.current = grid; }, [grid]);
+  useEffect(() => { handleMoveRef.current = handleMove; }, [handleMove]);
+
+  const requestHint = useCallback(() => {
+    if(gameState !== "playing") return;
+    setAiThinking(true);
+    const dir = getBestMove(grid);
+    setAiThinking(false);
+    if(!dir) return;
+    playSfx("click");
+    setHintDir(dir);
+    clearTimeout(hintTimeout.current);
+    hintTimeout.current = setTimeout(() => setHintDir(null), HINT_DISPLAY_MS);
+  }, [grid, gameState, playSfx]);
+
+  const toggleAutoPlay = useCallback(() => {
+    playSfx("click");
+    setHintDir(null);
+    setAiAutoPlay(prev => !prev);
+  }, [playSfx]);
+
+  // Solver-driven autoplay loop — runs off refs so it never needs to restart
+  // mid-game, and tears itself down the instant the game stops being playable.
+  useEffect(() => {
+    if(!aiAutoPlay || gameState !== "playing") return;
+    const id = setInterval(() => {
+      const dir = getBestMove(gridRef.current);
+      if(dir) handleMoveRef.current?.(dir);
+      else setAiAutoPlay(false);
+    }, AI_AUTOPLAY_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [aiAutoPlay, gameState]);
+
+  useEffect(() => {
+    if(gameState !== "playing") setAiAutoPlay(false);
+  }, [gameState]);
+
+  useEffect(() => () => clearTimeout(hintTimeout.current), []);
 
   useEffect(() => {
     const onKeyDown = (e) => {
@@ -257,6 +309,9 @@ export function useGameState(){
     setKtToast(false);
     lastSnapshot.current = null;
     setHasSnapshot(false);
+    setHintDir(null);
+    setAiAutoPlay(false);
+    clearTimeout(hintTimeout.current);
     setScreen("game");
   }, [playSfx]);
 
@@ -279,5 +334,6 @@ export function useGameState(){
     TILE, GAP, gridW,
     handleMove, clearBacklog, restart,
     onTouchStart, onTouchEnd,
+    hintDir, requestHint, aiThinking, aiAutoPlay, toggleAutoPlay,
   };
 }

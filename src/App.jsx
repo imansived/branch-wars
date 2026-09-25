@@ -1,4 +1,4 @@
-import { RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Volume2, VolumeX } from "lucide-react";
+import { RefreshCw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Volume2, VolumeX, Lightbulb, Bot } from "lucide-react";
 
 import { useGameState } from "./hooks/useGameState";
 
@@ -28,6 +28,7 @@ export default function App(){
     TILE, GAP, gridW,
     handleMove, clearBacklog, restart,
     onTouchStart, onTouchEnd,
+    hintDir, requestHint, aiAutoPlay, toggleAutoPlay,
   } = useGameState();
 
   if(screen === "front") return <FrontPage onStart={startGame}/>;
@@ -114,6 +115,40 @@ export default function App(){
               >
                 {muted ? <VolumeX size={14}/> : <Volume2 size={14}/>}
               </button>
+
+              <button
+                onClick={requestHint}
+                disabled={gameState !== "playing"}
+                title="AI hint — suggests the next move (expectimax search)"
+                style={{
+                  background:"rgba(255,254,248,0.9)", border:"1.5px solid #E0D4B8", borderRadius:8,
+                  padding:"8px 9px", cursor: gameState !== "playing" ? "not-allowed" : "pointer",
+                  opacity: gameState !== "playing" ? 0.4 : 1,
+                  color:"#8a6a30", lineHeight:0, boxShadow:"0 2px 6px rgba(90,60,20,0.06)",
+                }}
+                onMouseDown={e => { if(gameState === "playing") e.currentTarget.style.transform = "scale(0.93)"; }}
+                onMouseUp={e => { e.currentTarget.style.transform = ""; }}
+              >
+                <Lightbulb size={14}/>
+              </button>
+
+              <button
+                onClick={toggleAutoPlay}
+                disabled={gameState !== "playing"}
+                title={aiAutoPlay ? "Stop AI autoplay" : "Let the AI play (expectimax solver)"}
+                style={{
+                  background: aiAutoPlay ? "#1a0a00" : "rgba(255,254,248,0.9)",
+                  border:"1.5px solid #E0D4B8", borderRadius:8,
+                  padding:"8px 9px", cursor: gameState !== "playing" ? "not-allowed" : "pointer",
+                  opacity: gameState !== "playing" ? 0.4 : 1,
+                  color: aiAutoPlay ? "#FAF6EC" : "#8a6a30", lineHeight:0,
+                  boxShadow:"0 2px 6px rgba(90,60,20,0.06)",
+                }}
+                onMouseDown={e => { if(gameState === "playing") e.currentTarget.style.transform = "scale(0.93)"; }}
+                onMouseUp={e => { e.currentTarget.style.transform = ""; }}
+              >
+                <Bot size={14}/>
+              </button>
             </div>
           </div>
 
@@ -124,7 +159,7 @@ export default function App(){
 
           {/* HERO: board */}
           <div style={{ display:"flex", justifyContent:"center", padding:"10px 0" }}>
-            <Grid grid={grid} tileSize={TILE} gap={GAP} popups={popups} shaking={shaking}/>
+            <Grid grid={grid} tileSize={TILE} gap={GAP} popups={popups} shaking={shaking} hintDir={hintDir}/>
           </div>
 
           {/* Controls hint */}

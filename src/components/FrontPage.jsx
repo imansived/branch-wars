@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Play } from "lucide-react";
+import { Play, Bot } from "lucide-react";
 import { BRANCHES } from "../data/branches";
 
 const FIELDS = [
@@ -40,10 +40,22 @@ export default function FrontPage({ onStart }){
         </div>
 
         <div style={{
-          flex:1, background:"#FFFEF0", border:"1.5px solid #C9A060", borderLeft:"none",
+          flex:1, position:"relative", background:"#FFFEF0", border:"1.5px solid #C9A060", borderLeft:"none",
           borderRadius:"0 6px 6px 0", overflow:"hidden",
           backgroundImage:"repeating-linear-gradient(180deg,transparent,transparent 27px,rgba(100,140,200,0.1) 28px)",
         }}>
+          <div title="A built-in expectimax solver can suggest or play out moves for you"
+            style={{
+              position:"absolute", top:10, right:-30, zIndex:2,
+              transform:"rotate(9deg)", display:"flex", alignItems:"center", gap:4,
+              background:"#1A0A5A", color:"#FFF6DC", padding:"4px 34px 4px 12px",
+              fontSize:8, fontWeight:800, letterSpacing:1, textTransform:"uppercase",
+              boxShadow:"0 3px 10px rgba(0,0,0,0.28)",
+            }}
+          >
+            <Bot size={11}/>AI Solver Built-In
+          </div>
+
           <div style={{ height:8, background:"repeating-linear-gradient(90deg,#FF9933 0,#FF9933 33.33%,#ffffff 33.33%,#ffffff 66.66%,#138808 66.66%,#138808 100%)" }}/>
 
           <div style={{ padding:"14px 22px 18px" }}>
