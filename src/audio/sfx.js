@@ -30,7 +30,17 @@ function getBus(){
     comp.release.value   = 0.12;
     const g = ctx.createGain();
     g.gain.value = 0.72; // master volume — comfortable on phone speakers
-    comp.connect(g); g.connect(ctx.destination);
+
+    // Gentle top-end cut on the whole mix — the thing that makes synthesized
+    // oscillators read as "cheap"/beepy is usually harsh upper harmonics, not
+    // the notes themselves. Rounding those off is the single biggest lever
+    // for a more premium-feeling palette, and it's free on every sound at once.
+    const warmth = ctx.createBiquadFilter();
+    warmth.type = "highshelf";
+    warmth.frequency.value = 7500;
+    warmth.gain.value = -5;
+
+    comp.connect(g); g.connect(warmth); warmth.connect(ctx.destination);
     _bus = { input: comp, gain: g };
   }
   return _bus;
@@ -39,12 +49,12 @@ function getBus(){
 function getRev(){
   const ctx = getAudioCtx(); if(!ctx) return null;
   if(!_rev || _rev.context !== ctx){
-    const len = Math.floor(ctx.sampleRate * 0.32);
+    const len = Math.floor(ctx.sampleRate * 0.5);
     const buf = ctx.createBuffer(2, len, ctx.sampleRate);
     for(let ch = 0; ch < 2; ch++){
       const d = buf.getChannelData(ch);
       for(let i = 0; i < len; i++)
-        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6);
     }
     const conv = ctx.createConvolver();
     conv.buffer = buf;
@@ -60,29 +70,63 @@ function getRev(){
 // ─── PRIMITIVE BUILDERS ────────────────────────────────────────────────────────
 
 function tone({ freq=440, type="sine", t0, attack=0.006, decay=0.1,
-                sustain=0.35, release=0.22, peak=0.5, rev=0.18, delay=0 }={}){
+                sustain=0.35, release=0.22, peak=0.5, rev=0.18, delay=0, warm=true }={}){
   const ctx = getAudioCtx(); if(!ctx) return;
   const bus = getBus(); if(!bus) return;
   const start = (t0 ?? ctx.currentTime) + delay;
   const end   = start + attack + decay + release;
 
-  const osc = ctx.createOscillator();
   const env = ctx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, start);
-
   env.gain.setValueAtTime(0, start);
   env.gain.linearRampToValueAtTime(peak,           start + attack);
   env.gain.linearRampToValueAtTime(peak * sustain, start + attack + decay);
   env.gain.setValueAtTime(peak * sustain,          start + attack + decay);
   env.gain.exponentialRampToValueAtTime(0.0001,    end);
 
-  osc.connect(env); env.connect(bus.input);
+  // Rounds off upper harmonics so triangle/sawtooth voices sit smoother —
+  // same idea as the master-bus warmth filter, applied per-note.
+  const lp = ctx.createBiquadFilter();
+  lp.type = "lowpass";
+  lp.frequency.value = Math.max(freq * 4.5, 1500);
+  lp.Q.value = 0.3;
+  env.connect(lp); lp.connect(bus.input);
+
+  // Two slightly-detuned unison voices instead of one flat oscillator — the
+  // classic "chorus" trick, reads as far less clinical/MIDI-ish than a
+  // single bare tone. Gains are trimmed down so this adds width, not volume.
+  const voices = warm ? [-5, 5] : [0];
+  const voiceGain = voices.length > 1 ? 0.55 : 1;
+  voices.forEach(cents => {
+    const osc = ctx.createOscillator();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, start);
+    if(cents) osc.detune.setValueAtTime(cents, start);
+    if(voiceGain !== 1){
+      const og = ctx.createGain();
+      og.gain.value = voiceGain;
+      osc.connect(og); og.connect(env);
+    } else {
+      osc.connect(env);
+    }
+    osc.start(start); osc.stop(end + 0.05);
+  });
+
+  // Quiet high overtone — a soft "bell/mallet" shimmer riding on top of the
+  // fundamental instead of a bare single pitch.
+  if(warm){
+    const overtone = ctx.createOscillator();
+    const og = ctx.createGain();
+    og.gain.value = 0.08;
+    overtone.type = "sine";
+    overtone.frequency.setValueAtTime(freq * 3, start);
+    overtone.connect(og); og.connect(env);
+    overtone.start(start); overtone.stop(end + 0.05);
+  }
+
   if(rev > 0){
     const r = getRev();
     if(r){ const sg = ctx.createGain(); sg.gain.value = rev; env.connect(sg); sg.connect(r); }
   }
-  osc.start(start); osc.stop(end + 0.05);
 }
 
 function glide({ f0=440, f1=220, type="sine", t0, attack=0.008,
@@ -162,9 +206,10 @@ export const SFX = {
   // Swiping into a wall (no tiles actually move) previously made zero sound —
   // silent on both success and failure feels broken on a touch device where
   // there's no other confirmation the tap registered. Deliberately duller and
-  // drier than move() so it reads as "nothing happened", not as an action.
+  // drier than move() so it reads as "nothing happened", not as an action —
+  // warm:false skips the chorus/overtone treatment on purpose here.
   blocked(){
-    tone({ freq:180, type:"sine", peak:0.10, attack:0.002, decay:0.03, sustain:0.15, release:0.05, rev:0 });
+    tone({ freq:180, type:"sine", peak:0.10, attack:0.002, decay:0.03, sustain:0.15, release:0.05, rev:0, warm:false });
   },
 
   // Deep thud/boom that grows satisfyingly with each tier.
