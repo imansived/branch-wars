@@ -1,0 +1,66 @@
+{
+  "baseline_weights": {
+    "empty": 2.7,
+    "monotonicity": 1.0,
+    "smoothness": 0.1,
+    "corner": 2.0
+  },
+  "baseline_result": {
+    "avg_score": 873.2,
+    "median_score": 816.0,
+    "win_rate": 0.975,
+    "avg_highest": 8.975,
+    "games": 40
+  },
+  "tuned_weights": {
+    "empty": 2.7,
+    "monotonicity": 1.1819,
+    "smoothness": 0.1,
+    "corner": 1.4575
+  },
+  "tuned_result": {
+    "avg_score": 856.35,
+    "median_score": 812.5,
+    "win_rate": 1.0,
+    "avg_highest": 9,
+    "games": 40
+  },
+  "tuning_sample_result": {
+    "avg_score": 973.5,
+    "median_score": 975.0,
+    "win_rate": 1.0,
+    "avg_highest": 9,
+    "games": 10
+  },
+  "history": [
+    850,
+    850,
+    892.9,
+    892.9,
+    892.9,
+    892.9,
+    892.9,
+    892.9,
+    892.9,
+    892.9,
+    892.9,
+    926.3,
+    973.5,
+    973.5,
+    973.5,
+    973.5,
+    973.5,
+    973.5,
+    973.5,
+    973.5,
+    973.5
+  ],
+  "config": {
+    "games": 10,
+    "iterations": 20,
+    "max_depth": 2,
+    "final_games": 40,
+    "seed": 0,
+    "workers": null
+  }
+}

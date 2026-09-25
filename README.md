@@ -8,6 +8,10 @@ Built with React + Vite. Sound effects are synthesized live with the Web Audio A
 no external audio files. A built-in **expectimax search AI** (`src/ai/solver.js`)
 can suggest the next move or play the whole game out — see [AI solver](#ai-solver) below.
 
+The AI's heuristic weights are also empirically evaluated in a standalone
+Python experiment (self-play simulation, hill-climbing search, held-out
+evaluation) — see [`python/`](python/).
+
 ## Getting started
 
 ```bash
