@@ -17,12 +17,14 @@ function randomEventInterval(){
   return EVENT_INTERVAL_MIN + Math.floor(Math.random() * EVENT_INTERVAL_RANGE);
 }
 
-// 70px tile size is tuned for screens >= 400px wide (320px grid + 56px left
-// gutter for punch holes + 24px right padding). Narrower phones drop to 60px
-// so the grid+gutters fit without horizontal overflow or edge clipping.
+// Tile size scales to the viewport so the board always fits between the
+// symmetric side gutters (44px each, matching the app shell's padding) on
+// any phone width, capped at 70px for larger screens.
+const SIDE_GUTTER = 44;
 function computeTileSize(){
   if(typeof window === "undefined") return 70;
-  return window.innerWidth < 400 ? 60 : 70;
+  const available = window.innerWidth - SIDE_GUTTER * 2 - GAP * (SIZE + 1);
+  return Math.max(44, Math.min(70, Math.floor(available / SIZE)));
 }
 
 export function useGameState(){

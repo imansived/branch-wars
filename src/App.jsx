@@ -58,16 +58,16 @@ export default function App(){
           `,
           backgroundSize:"22px 22px,22px 22px,5.5px 5.5px,5.5px 5.5px",
           display:"flex", alignItems:"center", justifyContent:"center",
-          padding:"32px 24px 32px 56px", fontFamily:"'DM Sans',sans-serif",
+          padding:"32px 44px", fontFamily:"'DM Sans',sans-serif",
           userSelect:"none", position:"relative",
           touchAction:"none", WebkitTapHighlightColor:"transparent",
         }}
       >
-        <div style={{ width:gridW, maxWidth:"calc(100vw - 80px)", position:"relative", zIndex:1 }}>
+        <div style={{ width:gridW, maxWidth:"100%", position:"relative", zIndex:1 }}>
 
           {/* Header */}
-          <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:14, flexWrap:"wrap", gap:10 }}>
-            <div>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", marginBottom:14, gap:10 }}>
+            <div style={{ textAlign:"center" }}>
               <div style={{ fontSize:26, fontWeight:900, lineHeight:1, fontFamily:"'Caveat',cursive", color:"#1a0a00", letterSpacing:1 }}>
                 Branch<span style={{ color:"#C0392B" }}> Wars</span>
               </div>
@@ -76,7 +76,7 @@ export default function App(){
               </div>
             </div>
 
-            <div style={{ display:"flex", gap:6, alignItems:"flex-start" }}>
+            <div style={{ display:"flex", gap:6, alignItems:"flex-start", justifyContent:"center", flexWrap:"wrap", width:"100%" }}>
               {[["SCORE", score, "#1a0a00"], ["BEST", best, "#8a6a30"]].map(([lbl, val, tc]) => (
                 <div key={lbl} style={{ background:"rgba(255,254,248,0.9)", border:"1.5px solid #E0D4B8", borderRadius:8, padding:"6px 12px", textAlign:"center", minWidth:54, boxShadow:"0 2px 6px rgba(90,60,20,0.06)" }}>
                   <div style={{ color:"#A08050", fontSize:7, letterSpacing:2, textTransform:"uppercase", marginBottom:1, fontWeight:700 }}>{lbl}</div>

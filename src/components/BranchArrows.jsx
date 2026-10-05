@@ -72,7 +72,7 @@ export default function BranchArrows({ highestValue, flashId }){
                   </div>
 
                   {!isLast && (
-                    <div style={{ flex:1, display:"flex", alignItems:"center", margin:"0 2px", marginBottom:12, minWidth:14 }}>
+                    <div style={{ flex:1, display:"flex", alignItems:"center", margin:"0 1px", marginBottom:12, minWidth:6 }}>
                       <div style={{
                         flex:1, height:2.5, borderRadius:2,
                         background: achieved ? `linear-gradient(90deg, ${b.flat}, ${BRANCHES[i+1].flat})` : "rgba(200,185,150,0.4)",
