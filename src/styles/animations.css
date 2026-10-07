@@ -13,10 +13,14 @@ html, body { height: 100%; background: #EEE8D0; overscroll-behavior-y: none; }
   .app-shell { min-height: 100dvh; }
 }
 
-/* Below ~768px the board leaves too little margin for doodle text to clear
-   it — see the comment in MarginDoodles.jsx for the full reasoning. */
+/* Below ~768px the board leaves too little margin for the desktop doodle
+   system's phrases/boxes to clear it, so that layer hands off to a much
+   smaller, short-words-only mobile set instead of just disappearing — see
+   the comment in MarginDoodles.jsx for the full reasoning. */
+.margin-doodles-mobile { display: none; }
 @media (max-width: 768px) {
   .margin-doodles { display: none; }
+  .margin-doodles-mobile { display: block; }
 }
 
 @keyframes stampSlam {

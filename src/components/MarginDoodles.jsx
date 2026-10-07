@@ -358,22 +358,70 @@ function DoodleItem({ item, side }){
   );
 }
 
+// A ~375px phone has maybe 40px of real margin per side — nowhere near
+// enough for the desktop system's phrases and boxed notes, whose safe
+// clearance math assumes a much bigger gap. Rather than shrink that same
+// system until it's illegible, this is a deliberately different, much
+// smaller set: short words only (6 chars or less), plain text, no boxes,
+// pinned near the edge at a fixed 2% — at this length they're narrow
+// enough to clear the board there without needing per-item width math.
+// "Readable chaos," not a scaled-down version of the desktop wall of text.
+const MOBILE_LEFT = [
+  { text:"ATKT",  y:"6%",  rot:-8 },
+  { text:"72%",   y:"19%", rot:5,  accent:true },
+  { text:"BUNK?", y:"33%", rot:-6 },
+  { text:"DUE",   y:"48%", rot:6 },
+  { text:"LATE!", y:"63%", rot:-5, accent:true },
+  { text:"BUG",   y:"78%", rot:5 },
+  { text:"OOPS",  y:"91%", rot:-6 },
+];
+
+const MOBILE_RIGHT = [
+  { text:"VIVA",   y:"8%",  rot:7 },
+  { text:"COPY?",  y:"23%", rot:-6 },
+  { text:"KT?",    y:"38%", rot:5 },
+  { text:"404",    y:"53%", rot:-5, accent:true },
+  { text:"FAIL?",  y:"68%", rot:6 },
+  { text:"PASS?",  y:"82%", rot:-6, accent:true },
+  { text:"LAB",    y:"95%", rot:5 },
+];
+
+const mobileWordStyle = { fontSize:11, fontFamily:"'DM Sans',sans-serif", color:"#8A6030", fontWeight:800, letterSpacing:0.3 };
+
+function MobileDoodleItem({ item, side }){
+  return (
+    <div style={{
+      position:"absolute",
+      [side]: "2%",
+      top: item.y,
+      transform: `rotate(${item.rot}deg)`,
+      opacity: item.accent ? 0.6 : 0.42,
+    }}>
+      <div style={item.accent ? { ...mobileWordStyle, color:"#C0392B" } : mobileWordStyle}>{item.text}</div>
+    </div>
+  );
+}
+
 export default function MarginDoodles(){
   return (
-    // z-index:1, not 0 — the app shell right after this in the DOM is
-    // position:relative with no z-index of its own, which defaults to the
-    // same paint layer as z-index:0. Tied layers paint in DOM order, so at
-    // 0 this sat *behind* the shell's opaque background and never showed.
-    //
-    // .margin-doodles (see animations.css) hides this whole layer below
-    // ~768px wide. The board alone is ~320px and max(2%, ...) only
-    // guarantees items stay on-screen, not that they clear the board — on
-    // a ~375px phone there's maybe 25px of real margin per side, nowhere
-    // near enough for readable text to sit outside the card. Below that
-    // width this doesn't degrade gracefully, it just overlaps the UI.
-    <div className="margin-doodles" style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:1, overflow:"hidden" }}>
-      {LEFT_ITEMS.map((item, i) => <DoodleItem key={`l${i}`} item={item} side="left"/>)}
-      {RIGHT_ITEMS.map((item, i) => <DoodleItem key={`r${i}`} item={item} side="right"/>)}
-    </div>
+    <>
+      {/* z-index:1, not 0 — the app shell right after this in the DOM is
+          position:relative with no z-index of its own, which defaults to
+          the same paint layer as z-index:0. Tied layers paint in DOM
+          order, so at 0 this sat *behind* the shell's opaque background
+          and never showed.
+
+          .margin-doodles (see animations.css) shows only above ~768px,
+          where there's enough margin for the desktop system's clearance
+          math to hold. .margin-doodles-mobile is the inverse. */}
+      <div className="margin-doodles" style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:1, overflow:"hidden" }}>
+        {LEFT_ITEMS.map((item, i) => <DoodleItem key={`l${i}`} item={item} side="left"/>)}
+        {RIGHT_ITEMS.map((item, i) => <DoodleItem key={`r${i}`} item={item} side="right"/>)}
+      </div>
+      <div className="margin-doodles-mobile" style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:1, overflow:"hidden" }}>
+        {MOBILE_LEFT.map((item, i) => <MobileDoodleItem key={`ml${i}`} item={item} side="left"/>)}
+        {MOBILE_RIGHT.map((item, i) => <MobileDoodleItem key={`mr${i}`} item={item} side="right"/>)}
+      </div>
+    </>
   );
 }
