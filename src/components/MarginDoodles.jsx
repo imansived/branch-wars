@@ -51,6 +51,20 @@ const LEFT_TEXT = [
   { kind:"code",  text:"sudo apt install\nmotivation" },
   { kind:"label", text:"ATTENDANCE SHORTAGE" },
   { kind:"quote", text:"“SIR, I WAS PRESENT”" },
+  { kind:"label", text:"CGPA > SLEEP" },
+  { kind:"label", text:"SLEEP < DEADLINE" },
+  { kind:"label", text:"DEADLINE → PANIC" },
+  { kind:"label", text:"PANIC → PRODUCTIVITY" },
+  { kind:"label", text:"PRODUCTIVITY → 2 AM" },
+  { kind:"label", text:"2 AM → BUG" },
+  { kind:"label", text:"LAB RECORD INCOMPLETE" },
+  { kind:"label", text:"EXPERIMENT NO. 7" },
+  { kind:"label", text:"OBSERVATION TABLE" },
+  { kind:"label", text:"CALCULATION PENDING" },
+  { kind:"label", text:"SIGNATURE REQUIRED" },
+  { kind:"label", text:"RECORD CHECKING" },
+  { kind:"label", text:"VIVA STARTS NOW" },
+  { kind:"quote", text:"“WHY IS IT NOT RUNNING”" },
 ];
 
 const RIGHT_TEXT = [
@@ -77,6 +91,17 @@ const RIGHT_TEXT = [
   { kind:"label", text:"RESULT DECLARED" },
   { kind:"label", text:"SUBMIT BEFORE\n*11:59 PM*" },
   { kind:"label", text:"KT cleared\nfinally 🙏" },
+  { kind:"label", text:"BUG → GOOGLE" },
+  { kind:"label", text:"GOOGLE → STACK OVERFLOW" },
+  { kind:"label", text:"STACK OVERFLOW → SOLUTION" },
+  { kind:"label", text:"SOLUTION → COPY" },
+  { kind:"label", text:"COPY → SUBMIT" },
+  { kind:"label", text:"VIVA QUEUE" },
+  { kind:"label", text:"NEXT STUDENT" },
+  { kind:"label", text:"OUTPUT NOT MATCHING" },
+  { kind:"code",  text:"WORKING ON MY SYSTEM" },
+  { kind:"quote", text:"“IT WORKED YESTERDAY”" },
+  { kind:"quote", text:"“SIR IT WAS WORKING”" },
 ];
 
 const DECO_TYPES = ["stain","scribble","star","circuit","sine","gate","arrow","checkbox","rule","dots"];
@@ -258,8 +283,12 @@ function estimateHeight(entry){
 // glyph need very different clearance from the board, and a single global
 // "how close is allowed" constant can't be right for both at once.
 const CHAR_WIDTH = { label:6.6, code:6.2, quote:7.6, math:7.6 };
+// Decorative marks have no text to measure, and a flat guess undershot the
+// wider ones (sine, circuit) enough to cause real overlaps once they landed
+// at accent-tier scale — these are each mark's actual SVG/div width above.
+const DECO_WIDTH = { stain:50, scribble:46, star:20, circuit:64, sine:70, gate:54, arrow:34, checkbox:17, rule:54, dots:30 };
 function estimateWidth(entry){
-  if(!entry.text) return 40; // decorative marks are small and roughly fixed-size
+  if(!entry.text) return DECO_WIDTH[entry.kind] ?? 50;
   const longestLine = Math.max(...entry.text.replace(/\*/g, "").split("\n").map(l => l.length));
   return longestLine * CHAR_WIDTH[entry.kind] + (entry.kind === "label" || entry.kind === "code" ? 14 : 0);
 }
@@ -274,6 +303,11 @@ function estimateWidth(entry){
 // as close as their own size allows, ghost items drift further out on
 // average, and normal sits in between. The board's own half-width tops out
 // around 160px, so the +20 below is just a little extra breathing room.
+// ghost/normal's extraRange reaches well past any real viewport's margin on
+// purpose — the ones that would overshoot just collapse to the max(2%, ...)
+// floor below instead of overflowing, so on a wide screen a healthy share
+// of them land genuinely out near the true edge instead of stopping in a
+// comfortable mid-band and leaving the outer strip empty.
 function layout(entries){
   const heights = entries.map(estimateHeight);
   const gap = 15;
@@ -288,7 +322,7 @@ function layout(entries){
     const scale = between(scLo, scHi);
     const safe = estimateWidth(entry) * scale + 180;
     const xPow = tier === "ghost" ? 0.85 : tier === "accent" ? 2.4 : 1.5;
-    const extraRange = tier === "ghost" ? 260 : tier === "accent" ? 90 : 170;
+    const extraRange = tier === "ghost" ? 850 : tier === "accent" ? 90 : 450;
     return {
       ...entry,
       tier,
