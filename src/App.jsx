@@ -58,9 +58,9 @@ export default function App(){
           `,
           backgroundSize:"22px 22px,22px 22px,5.5px 5.5px,5.5px 5.5px",
           display:"flex", alignItems:"center", justifyContent:"center",
-          padding:"32px 44px", fontFamily:"'DM Sans',sans-serif",
+          padding:"clamp(12px, 3vh, 32px) 44px", fontFamily:"'DM Sans',sans-serif",
           userSelect:"none", position:"relative",
-          touchAction:"none", WebkitTapHighlightColor:"transparent",
+          WebkitTapHighlightColor:"transparent",
         }}
       >
         <div style={{ width:gridW, maxWidth:"100%", position:"relative", zIndex:1 }}>
@@ -160,7 +160,7 @@ export default function App(){
           </div>
 
           {/* HERO: board */}
-          <div style={{ display:"flex", justifyContent:"center", padding:"10px 0" }}>
+          <div style={{ display:"flex", justifyContent:"center", padding:"10px 0", touchAction:"none" }}>
             <Grid grid={grid} tileSize={TILE} gap={GAP} popups={popups} shaking={shaking} hintDir={hintDir}/>
           </div>
 
