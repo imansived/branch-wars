@@ -364,7 +364,14 @@ export default function MarginDoodles(){
     // position:relative with no z-index of its own, which defaults to the
     // same paint layer as z-index:0. Tied layers paint in DOM order, so at
     // 0 this sat *behind* the shell's opaque background and never showed.
-    <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:1, overflow:"hidden" }}>
+    //
+    // .margin-doodles (see animations.css) hides this whole layer below
+    // ~768px wide. The board alone is ~320px and max(2%, ...) only
+    // guarantees items stay on-screen, not that they clear the board — on
+    // a ~375px phone there's maybe 25px of real margin per side, nowhere
+    // near enough for readable text to sit outside the card. Below that
+    // width this doesn't degrade gracefully, it just overlaps the UI.
+    <div className="margin-doodles" style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:1, overflow:"hidden" }}>
       {LEFT_ITEMS.map((item, i) => <DoodleItem key={`l${i}`} item={item} side="left"/>)}
       {RIGHT_ITEMS.map((item, i) => <DoodleItem key={`r${i}`} item={item} side="right"/>)}
     </div>

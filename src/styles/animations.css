@@ -13,6 +13,12 @@ html, body { height: 100%; background: #EEE8D0; overscroll-behavior-y: none; }
   .app-shell { min-height: 100dvh; }
 }
 
+/* Below ~768px the board leaves too little margin for doodle text to clear
+   it — see the comment in MarginDoodles.jsx for the full reasoning. */
+@media (max-width: 768px) {
+  .margin-doodles { display: none; }
+}
+
 @keyframes stampSlam {
   0%{transform:scale(1);}
   26%{transform:scale(1.2) rotate(-1.5deg);filter:brightness(1.4);}
