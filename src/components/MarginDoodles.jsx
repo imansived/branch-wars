@@ -1,35 +1,42 @@
-// Each item carries its own x jitter (px, relative to the shared base offset)
-// and an irregular y — a straight column with even spacing reads as a UI
-// sidebar, not stuff scattered in a notebook margin. Mixing boxed "sticky
-// note" items with plain handwritten (Caveat) ones, plus genuinely
-// decorative marks (coffee stain, pen scribble, asterisk), is what sells
-// the chaos — a tidy grid of annotations never looks hand-made.
+// Each item's x is its own distance (px) from the card edge, not a small
+// jitter around one shared point — spread wide (roughly 0 to 260px) so
+// items land at genuinely different depths across the whole margin, from
+// right up against the board to out near the viewport edge, instead of
+// clustering in one strip. y is irregular for the same reason: an evenly
+// spaced column reads as a UI sidebar, not stuff scattered in a margin.
+// Mixing boxed "sticky note" items with plain handwritten (Caveat) ones and
+// pure decoration (coffee stain, pen scribble, asterisk) — several of them
+// faint, some bolder — is what sells depth instead of a flat wall of notes.
 const LEFT_ITEMS = [
-  { y:"4%",  x:8,   rot:-6, scale:1,    type:"math",     text:"∫eˣdx = eˣ+C" },
-  { y:"13%", x:-10, rot:4,  scale:0.92, type:"stain" },
-  { y:"19%", x:28,  rot:3,  scale:1,    type:"notice",   text:"ATTENDANCE\n62% ⚠ DETAIN" },
-  { y:"31%", x:-4,  rot:-7, scale:1,    type:"code",     text:"git blame life.c" },
-  { y:"38%", x:40,  rot:6,  scale:1,    type:"scribble" },
-  { y:"46%", x:6,   rot:4,  scale:1.1,  type:"circuit" },
-  { y:"58%", x:-8,  rot:-4, scale:1,    type:"notice",   text:"CGPA target: 8.5\nActual: 6.2" },
-  { y:"68%", x:22,  rot:-8, scale:0.85, type:"star" },
-  { y:"75%", x:0,   rot:5,  scale:1,    type:"code",     text:"while(alive){\n  study();\n}" },
-  { y:"85%", x:34,  rot:-3, scale:1,    type:"notice",   text:"Lab submit:\n✗ not done" },
-  { y:"94%", x:-6,  rot:3,  scale:1,    type:"sine" },
+  { y:"3%",  x:210, rot:-6, scale:0.9,  op:0.3,  type:"stain" },
+  { y:"9%",  x:60,  rot:-5, scale:1,    op:0.55, type:"math",     text:"∫eˣdx = eˣ+C" },
+  { y:"17%", x:160, rot:4,  scale:0.85, op:0.4,  type:"star" },
+  { y:"24%", x:10,  rot:3,  scale:1,    op:0.55, type:"notice",   text:"ATTENDANCE\n62% ⚠ DETAIN" },
+  { y:"33%", x:230, rot:-7, scale:1,    op:0.4,  type:"code",     text:"git blame life.c" },
+  { y:"40%", x:90,  rot:6,  scale:1,    op:0.45, type:"scribble" },
+  { y:"48%", x:180, rot:4,  scale:1.1,  op:0.38, type:"circuit" },
+  { y:"55%", x:30,  rot:-4, scale:1,    op:0.55, type:"notice",   text:"CGPA target: 8.5\nActual: 6.2" },
+  { y:"63%", x:140, rot:-5, scale:0.95, op:0.32, type:"stain" },
+  { y:"70%", x:250, rot:-8, scale:0.85, op:0.42, type:"star" },
+  { y:"77%", x:60,  rot:5,  scale:1,    op:0.5,  type:"code",     text:"while(alive){\n  study();\n}" },
+  { y:"85%", x:190, rot:3,  scale:1,    op:0.4,  type:"sine" },
+  { y:"93%", x:20,  rot:-3, scale:1,    op:0.55, type:"notice",   text:"Lab submit:\n✗ not done" },
 ];
 
 const RIGHT_ITEMS = [
-  { y:"5%",  x:10,  rot:6,  scale:1,    type:"notice",   text:"Viva tmrw\n2PM • Lab-4" },
-  { y:"15%", x:-14, rot:-4, scale:0.9,  type:"star" },
-  { y:"22%", x:30,  rot:-5, scale:1,    type:"notice",   text:"FEE DUE\n₹48,000" },
-  { y:"34%", x:-2,  rot:5,  scale:1,    type:"math",     text:"dy/dx = ?" },
-  { y:"42%", x:20,  rot:-3, scale:0.95, type:"stain" },
-  { y:"50%", x:4,   rot:5,  scale:1,    type:"gate" },
-  { y:"62%", x:-10, rot:-6, scale:1,    type:"notice",   text:"EXAM TMRW\n9AM HALL-3" },
-  { y:"71%", x:26,  rot:4,  scale:1,    type:"scribble" },
-  { y:"79%", x:2,   rot:-4, scale:1,    type:"code",     text:"int main(){\n  return 0;\n}" },
-  { y:"88%", x:-8,  rot:6,  scale:1,    type:"notice",   text:"BACKLOG: 2\nno more pls" },
-  { y:"96%", x:16,  rot:-3, scale:1,    type:"math",     text:"∑ regrets = ∞" },
+  { y:"4%",  x:40,  rot:6,  scale:1,    op:0.55, type:"notice",   text:"Viva tmrw\n2PM • Lab-4" },
+  { y:"12%", x:200, rot:-4, scale:0.9,  op:0.4,  type:"star" },
+  { y:"20%", x:90,  rot:-5, scale:1,    op:0.38, type:"scribble" },
+  { y:"27%", x:15,  rot:-5, scale:1,    op:0.55, type:"notice",   text:"FEE DUE\n₹48,000" },
+  { y:"35%", x:230, rot:5,  scale:1,    op:0.5,  type:"math",     text:"dy/dx = ?" },
+  { y:"43%", x:130, rot:-3, scale:0.95, op:0.32, type:"stain" },
+  { y:"51%", x:50,  rot:5,  scale:1,    op:0.38, type:"gate" },
+  { y:"58%", x:250, rot:-6, scale:1,    op:0.4,  type:"star" },
+  { y:"65%", x:20,  rot:-6, scale:1,    op:0.55, type:"notice",   text:"EXAM TMRW\n9AM HALL-3" },
+  { y:"73%", x:170, rot:4,  scale:1,    op:0.42, type:"scribble" },
+  { y:"80%", x:70,  rot:-4, scale:1,    op:0.5,  type:"code",     text:"int main(){\n  return 0;\n}" },
+  { y:"88%", x:220, rot:6,  scale:1,    op:0.38, type:"stain" },
+  { y:"95%", x:10,  rot:-3, scale:1,    op:0.55, type:"notice",   text:"BACKLOG: 2\nno more pls" },
 ];
 
 const handStyle = { fontSize:15, fontFamily:"'Caveat',cursive", color:"#8A6030", fontWeight:700, whiteSpace:"pre", lineHeight:1.3 };
@@ -112,19 +119,24 @@ function DoodleContent({ item }){
 
 // "2% from the viewport edge" alone is fine on a normal screen but leaves a
 // huge dead gap on a wide monitor, since the board stays a fixed ~300px
-// wide in the center regardless of viewport width. max() picks whichever is
-// larger: 2% wins on narrow screens, and the fixed 380px-from-center clamp
-// pulls everything in to hug the board once the viewport is wide enough
-// that 2% would otherwise strand it at the edge. Each item's own x then
-// jitters around that shared base so they don't all line up in a column.
+// wide in the center regardless of viewport width. 50% - 380px - x is each
+// item's actual position: 380px is roughly "hugging the board," and x (0 to
+// ~260) pushes it further out toward the edge from there, so different
+// items land at genuinely different depths instead of one shared strip.
+// max(2%, ...) is the floor for narrow screens, where this would otherwise
+// go negative — items with a larger x collapse toward that floor first as
+// the screen narrows, which is the right order (the ones already furthest
+// out run out of room before the ones hugging the board do). Opacity is
+// per-item (mostly faint, a few bolder) so this reads as background
+// texture, not a second layer of content competing with the board.
 function DoodleItem({ item, side }){
   return (
     <div style={{
       position:"absolute",
-      [side]: `calc(max(2%, calc(50% - 380px)) + ${item.x}px)`,
+      [side]: `max(2%, calc(50% - 380px - ${item.x}px))`,
       top: item.y,
       transform: `rotate(${item.rot}deg) scale(${item.scale})`,
-      opacity: 0.6,
+      opacity: item.op ?? 0.5,
     }}>
       <DoodleContent item={item}/>
     </div>
