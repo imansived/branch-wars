@@ -272,13 +272,20 @@ function layout(entries){
     const tier = entry.force ?? (rand() < 0.42 ? "ghost" : rand() < 0.84 ? "normal" : "accent");
     const [opLo, opHi] = tier === "ghost" ? [0.14, 0.26] : tier === "accent" ? [0.55, 0.72] : [0.34, 0.48];
     const [scLo, scHi] = tier === "ghost" ? [0.7, 0.85] : tier === "accent" ? [1, 1.16] : [0.88, 1.03];
-    const [xLo, xHi]   = tier === "ghost" ? [150, 280] : tier === "accent" ? [0, 120] : [40, 220];
+    // x used to be a hard per-tier range (ghost 150-280, accent 0-120, ...),
+    // which meant only the rare accent tier ever landed close to the board —
+    // the ring right around it stayed empty instead of chaotic. Every tier
+    // can reach all the way to 0 now; what differs is how *likely* that is:
+    // rand()**xPow skews toward 0 (close) as xPow climbs, so accent crowds
+    // in tight, ghost stays spread thin across the full depth (some close,
+    // most further out), and normal sits in between.
+    const xPow = tier === "ghost" ? 0.85 : tier === "accent" ? 2.4 : 1.5;
     return {
       ...entry,
       tier,
       op: between(opLo, opHi),
       scale: between(scLo, scHi),
-      x: between(xLo, xHi),
+      x: Math.pow(rand(), xPow) * 280,
       y: `${((centers[i] / total) * 96 + 2).toFixed(2)}%`,
       rot: between(-9, 9),
     };
