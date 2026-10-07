@@ -1,59 +1,106 @@
-// Each item's x is its own distance (px) from the card edge, not a small
-// jitter around one shared point — spread wide (roughly 0 to 260px) so
-// items land at genuinely different depths across the whole margin, from
-// right up against the board to out near the viewport edge, instead of
-// clustering in one strip. y is irregular for the same reason: an evenly
-// spaced column reads as a UI sidebar, not stuff scattered in a margin.
-// Mixing boxed "sticky note" items with plain handwritten (Caveat) ones and
-// pure decoration (coffee stain, pen scribble, asterisk) — several of them
-// faint, some bolder — is what sells depth instead of a flat wall of notes.
-const LEFT_ITEMS = [
-  { y:"2%",  x:160, rot:-6, scale:0.9,  op:0.3,  type:"stain" },
-  { y:"7%",  x:50,  rot:-5, scale:1,    op:0.55, type:"math",     text:"∫eˣdx = eˣ+C" },
-  { y:"13%", x:230, rot:4,  scale:0.85, op:0.4,  type:"star" },
-  { y:"19%", x:10,  rot:3,  scale:1,    op:0.55, type:"notice",   text:"ATTENDANCE\n62% ⚠ DETAIN" },
-  { y:"26%", x:120, rot:5,  scale:1,    op:0.5,  type:"notice",   text:"DEFAULTER LIST\nRoll No. 23 😭" },
-  { y:"33%", x:250, rot:-7, scale:1,    op:0.4,  type:"code",     text:"git blame life.c" },
-  { y:"39%", x:70,  rot:6,  scale:1,    op:0.45, type:"scribble" },
-  { y:"45%", x:190, rot:4,  scale:1.1,  op:0.38, type:"circuit" },
-  { y:"51%", x:20,  rot:-4, scale:1,    op:0.55, type:"notice",   text:"CGPA target: 8.5\nActual: 6.2" },
-  { y:"57%", x:150, rot:-5, scale:0.95, op:0.32, type:"stain" },
-  { y:"63%", x:40,  rot:5,  scale:1,    op:0.5,  type:"notice",   text:"Hall ticket:\nnot generated yet" },
-  { y:"69%", x:240, rot:-8, scale:0.85, op:0.42, type:"star" },
-  { y:"75%", x:90,  rot:5,  scale:1,    op:0.5,  type:"code",     text:"while(alive){\n  study();\n}" },
-  { y:"81%", x:200, rot:3,  scale:1,    op:0.4,  type:"sine" },
-  { y:"87%", x:10,  rot:-3, scale:1,    op:0.55, type:"notice",   text:"Lab submit:\n✗ not done" },
-  { y:"93%", x:130, rot:6,  scale:1,    op:0.45, type:"code",     text:"sudo apt install\nmotivation" },
-  { y:"98%", x:260, rot:-4, scale:0.9,  op:0.36, type:"scribble" },
+// A flat wall of equally-visible sticky notes reads as designed, not found.
+// The thing that sells "scattered in a margin" is a hierarchy: most items
+// are faint and small (you'd only notice them if you were actually looking
+// around the page, the way "PPT_Final_FINAL_2.pptx" is meant to be a small
+// discovery, not a headline), a few are bold enough to catch the eye, and
+// only the boldest ever get the sticky-note box or a red highlighted word.
+// That hierarchy — "ghost" / "normal" / "accent" — drives everything below:
+// opacity, scale, how close an item sits to the board, and whether it gets
+// boxed. It's generated from a seeded RNG rather than hand-placed so the
+// phrase list can grow without hand-computing 60 positions, but the seed is
+// fixed, so layout is stable across renders — this isn't reshuffling on
+// every re-render, only on a source change.
+
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = mulberry32(20240613);
+const between = (a, b) => a + rand() * (b - a);
+const pick = arr => arr[Math.floor(rand() * arr.length)];
+
+// Engineering-college specific on purpose — the texture only works as an
+// inside joke if it's recognizable without the UI explaining itself.
+// "*word*" marks the part that renders as a red highlight — used sparingly,
+// so it stays an occasional jolt rather than wallpaper.
+const LEFT_TEXT = [
+  { kind:"label", text:"ATTENDANCE\n62% ⚠ DETAIN" },
+  { kind:"label", text:"ATTENDANCE: *27.3%*" },
+  { kind:"quote", text:"“SIR ONE MARK PLEASE”" },
+  { kind:"label", text:"LAB RECORD PENDING" },
+  { kind:"code",  text:"segmentation fault" },
+  { kind:"label", text:"DEFAULTER LIST\nRoll No. 23 😭" },
+  { kind:"quote", text:"“BRO DID YOU STUDY?”" },
+  { kind:"label", text:"7:59 AM → CLASS AT 8:00" },
+  { kind:"label", text:"75% ATTENDANCE\n*REQUIRED*" },
+  { kind:"code",  text:"git blame life.c" },
+  { kind:"label", text:"GROUP PROJECT™" },
+  { kind:"label", text:"Hall ticket:\nnot generated yet" },
+  { kind:"code",  text:"BACKLOG LOADING..." },
+  { kind:"label", text:"CGPA target: 8.5\nActual: 6.2", force:"normal" },
+  { kind:"code",  text:"PPT_Final_FINAL_2.pptx", force:"ghost" },
+  { kind:"quote", text:"“JUST COPY MY RECORD”" },
+  { kind:"label", text:"HACKATHON MODE" },
+  { kind:"code",  text:"404: Motivation *Not Found*", force:"ghost" },
+  { kind:"label", text:"2 AM ASSIGNMENT" },
+  { kind:"label", text:"Lab submit:\n✗ not done" },
+  { kind:"code",  text:"sudo apt install\nmotivation" },
+  { kind:"label", text:"ATTENDANCE SHORTAGE" },
+  { kind:"quote", text:"“SIR, I WAS PRESENT”" },
 ];
 
-const RIGHT_ITEMS = [
-  { y:"3%",  x:30,  rot:6,  scale:1,    op:0.55, type:"notice",   text:"Viva tmrw\n2PM • Lab-4" },
-  { y:"9%",  x:180, rot:-4, scale:0.9,  op:0.4,  type:"star" },
-  { y:"15%", x:70,  rot:-5, scale:1,    op:0.38, type:"scribble" },
-  { y:"21%", x:230, rot:-5, scale:1,    op:0.5,  type:"notice",   text:"DETAINED:\n1 subject short" },
-  { y:"27%", x:10,  rot:-5, scale:1,    op:0.55, type:"notice",   text:"FEE DUE\n₹48,000" },
-  { y:"33%", x:140, rot:5,  scale:1,    op:0.5,  type:"math",     text:"dy/dx = ?" },
-  { y:"39%", x:250, rot:-3, scale:0.95, op:0.32, type:"stain" },
-  { y:"45%", x:50,  rot:5,  scale:1,    op:0.38, type:"gate" },
-  { y:"51%", x:190, rot:-6, scale:1,    op:0.4,  type:"star" },
-  { y:"57%", x:20,  rot:-6, scale:1,    op:0.55, type:"notice",   text:"EXAM TMRW\n9AM HALL-3" },
-  { y:"63%", x:220, rot:4,  scale:1,    op:0.42, type:"scribble" },
-  { y:"69%", x:100, rot:-4, scale:1,    op:0.5,  type:"notice",   text:"File submission:\nTomorrow 9AM sharp" },
-  { y:"75%", x:10,  rot:-4, scale:1,    op:0.5,  type:"code",     text:"int main(){\n  return 0;\n}" },
-  { y:"81%", x:160, rot:6,  scale:1,    op:0.38, type:"stain" },
-  { y:"87%", x:30,  rot:-3, scale:1,    op:0.55, type:"notice",   text:"BACKLOG: 2\nno more pls" },
-  { y:"93%", x:240, rot:5,  scale:0.85, op:0.42, type:"star" },
-  { y:"98%", x:90,  rot:-4, scale:1,    op:0.5,  type:"notice",   text:"KT cleared\nfinally 🙏" },
+const RIGHT_TEXT = [
+  { kind:"label", text:"Viva tmrw\n2PM • Lab-4" },
+  { kind:"label", text:"VIVA IN *5 MIN*" },
+  { kind:"quote", text:"“SIR, NETWORK ISSUE”" },
+  { kind:"label", text:"DETAINED:\n1 subject short" },
+  { kind:"label", text:"FEE DUE\n₹48,000" },
+  { kind:"math",  text:"dy/dx = ?" },
+  { kind:"label", text:"INTERNALS *TOMORROW*" },
+  { kind:"quote", text:"“SEND NOTES”" },
+  { kind:"label", text:"PROJECT SUBMISSION" },
+  { kind:"code",  text:"npm install" },
+  { kind:"label", text:"DEADLINE: *TODAY*" },
+  { kind:"label", text:"EXAM TMRW\n9AM HALL-3" },
+  { kind:"label", text:"File submission:\nTomorrow 9AM sharp" },
+  { kind:"code",  text:"int main(){\n  return 0;\n}" },
+  { kind:"label", text:"CGPA CALCULATOR" },
+  { kind:"label", text:"PLACEMENT SEASON" },
+  { kind:"label", text:"VIVA SURVIVAL" },
+  { kind:"quote", text:"“IMPORTANT QUESTIONS\nONLY”", force:"ghost" },
+  { kind:"label", text:"LAB MANUAL" },
+  { kind:"label", text:"BACKLOG: 2\nno more pls" },
+  { kind:"label", text:"RESULT DECLARED" },
+  { kind:"label", text:"SUBMIT BEFORE\n*11:59 PM*" },
+  { kind:"label", text:"KT cleared\nfinally 🙏" },
 ];
 
-const handStyle = { fontSize:15, fontFamily:"'Caveat',cursive", color:"#8A6030", fontWeight:700, whiteSpace:"pre", lineHeight:1.3 };
-const codeStyle = { fontSize:10, fontFamily:"'Courier New',monospace", color:"#6B8A6B", fontWeight:700, whiteSpace:"pre", lineHeight:1.55, background:"rgba(106,138,106,0.08)", padding:"4px 6px", borderRadius:3 };
-const noticeStyle = { fontSize:10, fontFamily:"'DM Sans',sans-serif", color:"#A85A4A", fontWeight:800, whiteSpace:"pre", lineHeight:1.55, background:"rgba(220,150,130,0.10)", border:"1.5px solid rgba(180,90,70,0.18)", padding:"4px 7px", borderRadius:3, boxShadow:"1px 2px 4px rgba(90,50,30,0.06)" };
+const DECO_TYPES = ["stain","scribble","star","circuit","sine","gate","arrow","checkbox","rule","dots"];
+
+const labelStyle  = { fontSize:10, fontFamily:"'DM Sans',sans-serif", color:"#8A6030", fontWeight:800, whiteSpace:"pre", lineHeight:1.5, letterSpacing:0.2 };
+const boxStyle    = { background:"rgba(220,150,130,0.12)", border:"1.5px solid rgba(180,90,70,0.22)", padding:"4px 7px", borderRadius:3, boxShadow:"1px 2px 4px rgba(90,50,30,0.07)" };
+const quoteStyle  = { fontSize:15, fontFamily:"'Caveat',cursive", color:"#4A6FA5", fontWeight:700, whiteSpace:"pre", lineHeight:1.25 };
+const codeStyle   = { fontSize:10, fontFamily:"'Courier New',monospace", color:"#6B8A6B", fontWeight:700, whiteSpace:"pre", lineHeight:1.5 };
+const codeBoxStyle = { background:"rgba(106,138,106,0.10)", padding:"4px 6px", borderRadius:3 };
+const mathStyle   = { fontSize:15, fontFamily:"'Caveat',cursive", color:"#8A6030", fontWeight:700, whiteSpace:"pre", lineHeight:1.3 };
+
+// "*word*" -> a red highlighted span. Plain string segments pass through
+// untouched. Deliberately rare in the source text, not a styling default.
+function renderHighlighted(text){
+  return text.split(/(\*[^*]+\*)/g).map((part, i) =>
+    part.startsWith("*") && part.endsWith("*")
+      ? <span key={i} style={{ color:"#C0392B", fontWeight:900 }}>{part.slice(1, -1)}</span>
+      : part
+  );
+}
 
 function Circuit(){
   return (
-    <svg width="64" height="26" viewBox="0 0 72 30" fill="none" stroke="#A08050" strokeWidth="1.8" opacity="0.5">
+    <svg width="64" height="26" viewBox="0 0 72 30" fill="none" stroke="#A08050" strokeWidth="1.8">
       <line x1="0" y1="15" x2="10" y2="15"/><rect x="10" y="9" width="14" height="12" rx="1.5"/>
       <line x1="24" y1="15" x2="34" y2="15"/><circle cx="38" cy="15" r="5"/>
       <line x1="43" y1="15" x2="52" y2="15"/><rect x="52" y="9" width="14" height="12" rx="1.5"/>
@@ -64,7 +111,7 @@ function Circuit(){
 
 function Sine(){
   return (
-    <svg width="70" height="22" viewBox="0 0 80 26" fill="none" stroke="#A0825A" strokeWidth="2" opacity="0.5">
+    <svg width="70" height="22" viewBox="0 0 80 26" fill="none" stroke="#A0825A" strokeWidth="2">
       <path d="M0 13 C10 2 20 2 30 13 S50 24 60 13 S70 2 80 13"/>
     </svg>
   );
@@ -72,7 +119,7 @@ function Sine(){
 
 function Gate(){
   return (
-    <svg width="54" height="32" viewBox="0 0 62 38" fill="none" stroke="#8A6FA0" strokeWidth="2" opacity="0.5">
+    <svg width="54" height="32" viewBox="0 0 62 38" fill="none" stroke="#8A6FA0" strokeWidth="2">
       <line x1="0" y1="10" x2="14" y2="10"/><line x1="0" y1="28" x2="14" y2="28"/>
       <path d="M14 4 L14 34 Q46 34 46 19 Q46 4 14 4Z"/><line x1="46" y1="19" x2="62" y2="19"/>
     </svg>
@@ -83,7 +130,7 @@ function Gate(){
 // a clean circle, so it reads as a mug set down carelessly, not a logo.
 function Stain(){
   return (
-    <svg width="50" height="44" viewBox="0 0 52 46" fill="none" opacity="0.4">
+    <svg width="50" height="44" viewBox="0 0 52 46" fill="none">
       <ellipse cx="26" cy="24" rx="23" ry="18" stroke="#8A6030" strokeWidth="1.6" transform="rotate(-6 26 24)"/>
       <ellipse cx="29" cy="21" rx="16" ry="12.5" stroke="#8A6030" strokeWidth="1.1" opacity="0.55" transform="rotate(4 29 21)"/>
     </svg>
@@ -94,7 +141,7 @@ function Stain(){
 // something in the margin while reviewing.
 function Scribble(){
   return (
-    <svg width="46" height="20" viewBox="0 0 48 22" fill="none" stroke="#C0392B" strokeWidth="2.2" strokeLinecap="round" opacity="0.5">
+    <svg width="46" height="20" viewBox="0 0 48 22" fill="none" stroke="#C0392B" strokeWidth="2.2" strokeLinecap="round">
       <path d="M2 16 Q10 4 18 13 T34 11 T46 16"/>
     </svg>
   );
@@ -104,39 +151,149 @@ function Scribble(){
 // "see footnote" in actual margin notes.
 function Star(){
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#A0825A" strokeWidth="1.7" strokeLinecap="round" opacity="0.55">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#A0825A" strokeWidth="1.7" strokeLinecap="round">
       <path d="M10 1 L10 19 M1.5 10 L18.5 10 M3.8 3.8 L16.2 16.2 M16.2 3.8 L3.8 16.2"/>
     </svg>
   );
 }
 
+// A small curved "see here" arrow — the kind you'd draw pointing at
+// something you just wrote, not a UI chevron.
+function Arrow(){
+  return (
+    <svg width="34" height="20" viewBox="0 0 38 22" fill="none" stroke="#8A6030" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 14 Q18 2 34 10"/>
+      <path d="M26 5 L34 10 L28 16"/>
+    </svg>
+  );
+}
+
+function Checkbox(){
+  const checked = rand() > 0.5;
+  return (
+    <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="#8A6030" strokeWidth="1.7">
+      <rect x="1.2" y="1.2" width="14.6" height="14.6" rx="2"/>
+      {checked && <path d="M4 8.5 L7 11.8 L13 4.8" strokeLinecap="round" strokeLinejoin="round"/>}
+    </svg>
+  );
+}
+
+// A thin hand-ruled line — the kind drawn under a word for emphasis, or
+// just to separate two scrawled notes. Deliberately not a UI divider.
+function Rule(){
+  return <div style={{ width:between(34, 54), height:1.4, background:"#A0825A" }}/>;
+}
+
+// A small patch of dots — a scrap of the page's own graph-paper texture
+// repeated at a different scale/rotation, like it bled through from the
+// line beneath.
+function DotGrid(){
+  const dots = [];
+  for(let r = 0; r < 3; r++) for(let c = 0; c < 4; c++) dots.push([c * 8 + 2, r * 8 + 2]);
+  return (
+    <svg width="30" height="22" viewBox="0 0 30 22">
+      {dots.map(([cx, cy], i) => <circle key={i} cx={cx} cy={cy} r="1.3" fill="#A0825A"/>)}
+    </svg>
+  );
+}
+
 function DoodleContent({ item }){
-  switch(item.type){
-    case "math": return <div style={handStyle}>{item.text}</div>;
-    case "code": return <div style={codeStyle}>{item.text}</div>;
-    case "notice": return <div style={noticeStyle}>{item.text}</div>;
-    case "circuit": return <Circuit/>;
-    case "sine": return <Sine/>;
-    case "gate": return <Gate/>;
+  switch(item.kind){
+    case "label": {
+      const style = item.tier === "accent" ? { ...labelStyle, ...boxStyle } : labelStyle;
+      return <div style={style}>{renderHighlighted(item.text)}</div>;
+    }
+    case "quote": return <div style={quoteStyle}>{item.text}</div>;
+    case "math": return <div style={mathStyle}>{item.text}</div>;
+    case "code": {
+      const style = item.tier === "accent" ? { ...codeStyle, ...codeBoxStyle } : codeStyle;
+      return <div style={style}>{renderHighlighted(item.text)}</div>;
+    }
     case "stain": return <Stain/>;
     case "scribble": return <Scribble/>;
     case "star": return <Star/>;
+    case "circuit": return <Circuit/>;
+    case "sine": return <Sine/>;
+    case "gate": return <Gate/>;
+    case "arrow": return <Arrow/>;
+    case "checkbox": return <Checkbox/>;
+    case "rule": return <Rule/>;
+    case "dots": return <DotGrid/>;
     default: return null;
   }
 }
 
+// Interleaves one decorative mark after every two text entries, so the
+// page is never more than a couple of notes deep without a breather —
+// otherwise, at this many phrases, it reads as a wall of text rather than
+// a margin.
+function withDecoration(textEntries){
+  const out = [];
+  textEntries.forEach((entry, i) => {
+    out.push(entry);
+    if(i % 2 === 1) out.push({ kind: pick(DECO_TYPES) });
+  });
+  return out;
+}
+
+// Rough rendered height in px, scaled later — a fixed percentage-per-item
+// band (100/n) ignored the fact that a two-line boxed note is 2-3x taller
+// than a checkbox glyph, so dense runs of multi-line text could overlap
+// their neighbor even though their y *anchors* were correctly spaced. This
+// estimate feeds a cumulative layout instead, so spacing is proportional
+// to what each item actually needs.
+function estimateHeight(entry){
+  if(entry.kind === "label" || entry.kind === "code"){
+    const lines = (entry.text.match(/\n/g) || []).length + 1;
+    return 15 + lines * 13;
+  }
+  if(entry.kind === "quote") return (entry.text.match(/\n/g) || []).length ? 34 : 20;
+  if(entry.kind === "math") return 20;
+  return 26; // decorative marks
+}
+
+// Each entry becomes a positioned item: a tier (ghost/normal/accent, see
+// top-of-file note) picked at random unless an entry forces one, which
+// drives opacity, scale, and x — x is distance (px) from the board itself,
+// so accent items land close to it (more likely to be seen) and ghost
+// items drift toward the far edge (more likely to be missed, on purpose).
+// y comes from walking a cumulative cursor through each item's estimated
+// height plus a fixed gap, then normalizing to a 0-100% range — spacing
+// that adapts to content size instead of assuming every item is the same
+// height, which is what caused real overlaps before.
+function layout(entries){
+  const heights = entries.map(estimateHeight);
+  const gap = 15;
+  let cursor = 0;
+  const centers = heights.map(h => { const c = cursor + h / 2; cursor += h + gap; return c; });
+  const total = cursor - gap;
+
+  return entries.map((entry, i) => {
+    const tier = entry.force ?? (rand() < 0.42 ? "ghost" : rand() < 0.84 ? "normal" : "accent");
+    const [opLo, opHi] = tier === "ghost" ? [0.14, 0.26] : tier === "accent" ? [0.55, 0.72] : [0.34, 0.48];
+    const [scLo, scHi] = tier === "ghost" ? [0.7, 0.85] : tier === "accent" ? [1, 1.16] : [0.88, 1.03];
+    const [xLo, xHi]   = tier === "ghost" ? [150, 280] : tier === "accent" ? [0, 120] : [40, 220];
+    return {
+      ...entry,
+      tier,
+      op: between(opLo, opHi),
+      scale: between(scLo, scHi),
+      x: between(xLo, xHi),
+      y: `${((centers[i] / total) * 96 + 2).toFixed(2)}%`,
+      rot: between(-9, 9),
+    };
+  });
+}
+
+const LEFT_ITEMS = layout(withDecoration(LEFT_TEXT));
+const RIGHT_ITEMS = layout(withDecoration(RIGHT_TEXT));
+
 // "2% from the viewport edge" alone is fine on a normal screen but leaves a
 // huge dead gap on a wide monitor, since the board stays a fixed ~300px
 // wide in the center regardless of viewport width. 50% - 380px - x is each
-// item's actual position: 380px is roughly "hugging the board," and x (0 to
-// ~260) pushes it further out toward the edge from there, so different
-// items land at genuinely different depths instead of one shared strip.
-// max(2%, ...) is the floor for narrow screens, where this would otherwise
-// go negative — items with a larger x collapse toward that floor first as
-// the screen narrows, which is the right order (the ones already furthest
-// out run out of room before the ones hugging the board do). Opacity is
-// per-item (mostly faint, a few bolder) so this reads as background
-// texture, not a second layer of content competing with the board.
+// item's actual position: 380px is roughly "hugging the board," and x
+// pushes it further out toward the edge from there. max(2%, ...) is the
+// floor for narrow screens, where this would otherwise go negative.
 function DoodleItem({ item, side }){
   return (
     <div style={{
@@ -144,7 +301,7 @@ function DoodleItem({ item, side }){
       [side]: `max(2%, calc(50% - 380px - ${item.x}px))`,
       top: item.y,
       transform: `rotate(${item.rot}deg) scale(${item.scale})`,
-      opacity: item.op ?? 0.5,
+      opacity: item.op,
     }}>
       <DoodleContent item={item}/>
     </div>
