@@ -69,7 +69,11 @@ function DoodleItem({ item, side }){
 
 export default function MarginDoodles(){
   return (
-    <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0, overflow:"hidden" }}>
+    // z-index:1, not 0 — the app shell right after this in the DOM is
+    // position:relative with no z-index of its own, which defaults to the
+    // same paint layer as z-index:0. Tied layers paint in DOM order, so at
+    // 0 this sat *behind* the shell's opaque background and never showed.
+    <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:1, overflow:"hidden" }}>
       {LEFT_ITEMS.map((item, i) => <DoodleItem key={`l${i}`} item={item} side="left"/>)}
       {RIGHT_ITEMS.map((item, i) => <DoodleItem key={`r${i}`} item={item} side="right"/>)}
     </div>
