@@ -252,15 +252,28 @@ function estimateHeight(entry){
   return 26; // decorative marks
 }
 
+// Rough rendered width in px (pre-scale) — used to figure out how close an
+// item can safely get. Treating every item as the same width was the bug
+// behind two real overlaps: a wide two-line boxed note and a lone checkbox
+// glyph need very different clearance from the board, and a single global
+// "how close is allowed" constant can't be right for both at once.
+const CHAR_WIDTH = { label:6.6, code:6.2, quote:7.6, math:7.6 };
+function estimateWidth(entry){
+  if(!entry.text) return 40; // decorative marks are small and roughly fixed-size
+  const longestLine = Math.max(...entry.text.replace(/\*/g, "").split("\n").map(l => l.length));
+  return longestLine * CHAR_WIDTH[entry.kind] + (entry.kind === "label" || entry.kind === "code" ? 14 : 0);
+}
+
 // Each entry becomes a positioned item: a tier (ghost/normal/accent, see
 // top-of-file note) picked at random unless an entry forces one, which
-// drives opacity, scale, and x — x is distance (px) from the board itself,
-// so accent items land close to it (more likely to be seen) and ghost
-// items drift toward the far edge (more likely to be missed, on purpose).
-// y comes from walking a cumulative cursor through each item's estimated
-// height plus a fixed gap, then normalizing to a 0-100% range — spacing
-// that adapts to content size instead of assuming every item is the same
-// height, which is what caused real overlaps before.
+// drives opacity and scale. x is then split into two parts: `safe`, the
+// minimum distance this item's own (scaled) width needs from the board to
+// avoid overlapping it, and `extra`, how much further beyond that minimum
+// it actually sits — which is what the tier controls. rand()**xPow skews
+// toward 0 (right at the safe minimum) as xPow climbs, so accent items hug
+// as close as their own size allows, ghost items drift further out on
+// average, and normal sits in between. The board's own half-width tops out
+// around 160px, so the +20 below is just a little extra breathing room.
 function layout(entries){
   const heights = entries.map(estimateHeight);
   const gap = 15;
@@ -272,20 +285,16 @@ function layout(entries){
     const tier = entry.force ?? (rand() < 0.42 ? "ghost" : rand() < 0.84 ? "normal" : "accent");
     const [opLo, opHi] = tier === "ghost" ? [0.14, 0.26] : tier === "accent" ? [0.55, 0.72] : [0.34, 0.48];
     const [scLo, scHi] = tier === "ghost" ? [0.7, 0.85] : tier === "accent" ? [1, 1.16] : [0.88, 1.03];
-    // x used to be a hard per-tier range (ghost 150-280, accent 0-120, ...),
-    // which meant only the rare accent tier ever landed close to the board —
-    // the ring right around it stayed empty instead of chaotic. Every tier
-    // can reach all the way to 0 now; what differs is how *likely* that is:
-    // rand()**xPow skews toward 0 (close) as xPow climbs, so accent crowds
-    // in tight, ghost stays spread thin across the full depth (some close,
-    // most further out), and normal sits in between.
+    const scale = between(scLo, scHi);
+    const safe = estimateWidth(entry) * scale + 180;
     const xPow = tier === "ghost" ? 0.85 : tier === "accent" ? 2.4 : 1.5;
+    const extraRange = tier === "ghost" ? 260 : tier === "accent" ? 90 : 170;
     return {
       ...entry,
       tier,
       op: between(opLo, opHi),
-      scale: between(scLo, scHi),
-      x: Math.pow(rand(), xPow) * 280,
+      scale,
+      x: safe + Math.pow(rand(), xPow) * extraRange,
       y: `${((centers[i] / total) * 96 + 2).toFixed(2)}%`,
       rot: between(-9, 9),
     };
@@ -297,15 +306,15 @@ const RIGHT_ITEMS = layout(withDecoration(RIGHT_TEXT));
 
 // "2% from the viewport edge" alone is fine on a normal screen but leaves a
 // huge dead gap on a wide monitor, since the board stays a fixed ~300px
-// wide in the center regardless of viewport width. 50% - 380px - x is each
-// item's actual position: 380px is roughly "hugging the board," and x
-// pushes it further out toward the edge from there. max(2%, ...) is the
-// floor for narrow screens, where this would otherwise go negative.
+// wide in the center regardless of viewport width. 50% - x is each item's
+// actual position; x already bakes in that item's own safe clearance from
+// the board (see layout() above), so this is just placing it. max(2%, ...)
+// is the floor for narrow screens, where this would otherwise go negative.
 function DoodleItem({ item, side }){
   return (
     <div style={{
       position:"absolute",
-      [side]: `max(2%, calc(50% - 380px - ${item.x}px))`,
+      [side]: `max(2%, calc(50% - ${item.x}px))`,
       top: item.y,
       transform: `rotate(${item.rot}deg) scale(${item.scale})`,
       opacity: item.op,
