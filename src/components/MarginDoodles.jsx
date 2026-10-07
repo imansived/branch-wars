@@ -1,29 +1,40 @@
+// Each item carries its own x jitter (px, relative to the shared base offset)
+// and an irregular y — a straight column with even spacing reads as a UI
+// sidebar, not stuff scattered in a notebook margin. Mixing boxed "sticky
+// note" items with plain handwritten (Caveat) ones, plus genuinely
+// decorative marks (coffee stain, pen scribble, asterisk), is what sells
+// the chaos — a tidy grid of annotations never looks hand-made.
 const LEFT_ITEMS = [
-  { y:"6%", rot:-4, type:"math", text:"∫eˣdx = eˣ+C" },
-  { y:"16%", rot:3, type:"stat", text:"CGPA target: 8.5\nActual: 6.2" },
-  { y:"28%", rot:-5, type:"code", text:"while(alive){\n  study();\n}" },
-  { y:"40%", rot:4, type:"circuit" },
-  { y:"52%", rot:-3, type:"notice", text:"Lab submit:\n✗ not done" },
-  { y:"64%", rot:5, type:"code", text:"V = IR" },
-  { y:"76%", rot:-4, type:"notice", text:"Viva tmrw\n2PM • Lab-4" },
-  { y:"88%", rot:3, type:"sine" },
+  { y:"4%",  x:8,   rot:-6, scale:1,    type:"math",     text:"∫eˣdx = eˣ+C" },
+  { y:"13%", x:-10, rot:4,  scale:0.92, type:"stain" },
+  { y:"19%", x:28,  rot:3,  scale:1,    type:"notice",   text:"ATTENDANCE\n62% ⚠ DETAIN" },
+  { y:"31%", x:-4,  rot:-7, scale:1,    type:"code",     text:"git blame life.c" },
+  { y:"38%", x:40,  rot:6,  scale:1,    type:"scribble" },
+  { y:"46%", x:6,   rot:4,  scale:1.1,  type:"circuit" },
+  { y:"58%", x:-8,  rot:-4, scale:1,    type:"notice",   text:"CGPA target: 8.5\nActual: 6.2" },
+  { y:"68%", x:22,  rot:-8, scale:0.85, type:"star" },
+  { y:"75%", x:0,   rot:5,  scale:1,    type:"code",     text:"while(alive){\n  study();\n}" },
+  { y:"85%", x:34,  rot:-3, scale:1,    type:"notice",   text:"Lab submit:\n✗ not done" },
+  { y:"94%", x:-6,  rot:3,  scale:1,    type:"sine" },
 ];
 
 const RIGHT_ITEMS = [
-  { y:"6%", rot:5, type:"notice", text:"ATTENDANCE\n62% ⚠ DETAIN" },
-  { y:"17%", rot:-4, type:"notice", text:"FEE DUE\n₹48,000" },
-  { y:"29%", rot:4, type:"math", text:"dy/dx = ?" },
-  { y:"41%", rot:-5, type:"gate" },
-  { y:"53%", rot:3, type:"notice", text:"EXAM TMRW\n9AM HALL-3" },
-  { y:"65%", rot:-4, type:"code", text:"int main(){\n  return 0;\n}" },
-  { y:"77%", rot:5, type:"notice", text:"BACKLOG: 2\nno more pls" },
-  { y:"89%", rot:-3, type:"math", text:"∑ regrets = ∞" },
+  { y:"5%",  x:10,  rot:6,  scale:1,    type:"notice",   text:"Viva tmrw\n2PM • Lab-4" },
+  { y:"15%", x:-14, rot:-4, scale:0.9,  type:"star" },
+  { y:"22%", x:30,  rot:-5, scale:1,    type:"notice",   text:"FEE DUE\n₹48,000" },
+  { y:"34%", x:-2,  rot:5,  scale:1,    type:"math",     text:"dy/dx = ?" },
+  { y:"42%", x:20,  rot:-3, scale:0.95, type:"stain" },
+  { y:"50%", x:4,   rot:5,  scale:1,    type:"gate" },
+  { y:"62%", x:-10, rot:-6, scale:1,    type:"notice",   text:"EXAM TMRW\n9AM HALL-3" },
+  { y:"71%", x:26,  rot:4,  scale:1,    type:"scribble" },
+  { y:"79%", x:2,   rot:-4, scale:1,    type:"code",     text:"int main(){\n  return 0;\n}" },
+  { y:"88%", x:-8,  rot:6,  scale:1,    type:"notice",   text:"BACKLOG: 2\nno more pls" },
+  { y:"96%", x:16,  rot:-3, scale:1,    type:"math",     text:"∑ regrets = ∞" },
 ];
 
-const mathStyle = { fontSize:11, fontFamily:"'DM Sans',sans-serif", color:"#7A6240", fontWeight:700, whiteSpace:"pre", lineHeight:1.5 };
+const handStyle = { fontSize:15, fontFamily:"'Caveat',cursive", color:"#8A6030", fontWeight:700, whiteSpace:"pre", lineHeight:1.3 };
 const codeStyle = { fontSize:10, fontFamily:"'Courier New',monospace", color:"#6B8A6B", fontWeight:700, whiteSpace:"pre", lineHeight:1.55, background:"rgba(106,138,106,0.08)", padding:"4px 6px", borderRadius:3 };
-const noticeStyle = { fontSize:10, fontFamily:"'DM Sans',sans-serif", color:"#A85A4A", fontWeight:800, whiteSpace:"pre", lineHeight:1.55, background:"rgba(220,150,130,0.10)", border:"1.5px solid rgba(180,90,70,0.18)", padding:"4px 7px", borderRadius:3 };
-const statStyle = { fontSize:10, fontFamily:"'DM Sans',sans-serif", color:"#A0825A", fontWeight:700, whiteSpace:"pre", lineHeight:1.55, background:"rgba(220,180,130,0.12)", border:"1.5px solid rgba(180,130,70,0.18)", padding:"4px 7px", borderRadius:3 };
+const noticeStyle = { fontSize:10, fontFamily:"'DM Sans',sans-serif", color:"#A85A4A", fontWeight:800, whiteSpace:"pre", lineHeight:1.55, background:"rgba(220,150,130,0.10)", border:"1.5px solid rgba(180,90,70,0.18)", padding:"4px 7px", borderRadius:3, boxShadow:"1px 2px 4px rgba(90,50,30,0.06)" };
 
 function Circuit(){
   return (
@@ -53,23 +64,69 @@ function Gate(){
   );
 }
 
-// "2% from the viewport edge" is fine up to a point, but on a wide monitor
-// that pins the doodles to the far edges while the board stays a fixed
-// ~300px wide in the middle — a huge dead gap between them. max() picks
-// whichever is larger: 2% keeps them near the edge on narrow screens (where
-// that 2%-vs-380px comparison always favors 2%), and the fixed 380px-from-
-// center clamp pulls them in to hug the board once the viewport is wide
-// enough that 2% would otherwise drift away from it.
+// A coffee-ring stain — two slightly offset, imperfect ellipses rather than
+// a clean circle, so it reads as a mug set down carelessly, not a logo.
+function Stain(){
+  return (
+    <svg width="50" height="44" viewBox="0 0 52 46" fill="none" opacity="0.4">
+      <ellipse cx="26" cy="24" rx="23" ry="18" stroke="#8A6030" strokeWidth="1.6" transform="rotate(-6 26 24)"/>
+      <ellipse cx="29" cy="21" rx="16" ry="12.5" stroke="#8A6030" strokeWidth="1.1" opacity="0.55" transform="rotate(4 29 21)"/>
+    </svg>
+  );
+}
+
+// A loose pen underline/emphasis mark, like someone circled or underlined
+// something in the margin while reviewing.
+function Scribble(){
+  return (
+    <svg width="46" height="20" viewBox="0 0 48 22" fill="none" stroke="#C0392B" strokeWidth="2.2" strokeLinecap="round" opacity="0.5">
+      <path d="M2 16 Q10 4 18 13 T34 11 T46 16"/>
+    </svg>
+  );
+}
+
+// A hand-scratched asterisk, the kind of mark that means "important" or
+// "see footnote" in actual margin notes.
+function Star(){
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#A0825A" strokeWidth="1.7" strokeLinecap="round" opacity="0.55">
+      <path d="M10 1 L10 19 M1.5 10 L18.5 10 M3.8 3.8 L16.2 16.2 M16.2 3.8 L3.8 16.2"/>
+    </svg>
+  );
+}
+
+function DoodleContent({ item }){
+  switch(item.type){
+    case "math": return <div style={handStyle}>{item.text}</div>;
+    case "code": return <div style={codeStyle}>{item.text}</div>;
+    case "notice": return <div style={noticeStyle}>{item.text}</div>;
+    case "circuit": return <Circuit/>;
+    case "sine": return <Sine/>;
+    case "gate": return <Gate/>;
+    case "stain": return <Stain/>;
+    case "scribble": return <Scribble/>;
+    case "star": return <Star/>;
+    default: return null;
+  }
+}
+
+// "2% from the viewport edge" alone is fine on a normal screen but leaves a
+// huge dead gap on a wide monitor, since the board stays a fixed ~300px
+// wide in the center regardless of viewport width. max() picks whichever is
+// larger: 2% wins on narrow screens, and the fixed 380px-from-center clamp
+// pulls everything in to hug the board once the viewport is wide enough
+// that 2% would otherwise strand it at the edge. Each item's own x then
+// jitters around that shared base so they don't all line up in a column.
 function DoodleItem({ item, side }){
   return (
-    <div style={{ position:"absolute", [side]:"max(2%, calc(50% - 380px))", top:item.y, transform:`rotate(${item.rot}deg)`, opacity:0.6 }}>
-      {item.type === "math" && <div style={mathStyle}>{item.text}</div>}
-      {item.type === "code" && <div style={codeStyle}>{item.text}</div>}
-      {item.type === "notice" && <div style={noticeStyle}>{item.text}</div>}
-      {item.type === "stat" && <div style={statStyle}>{item.text}</div>}
-      {item.type === "circuit" && <Circuit/>}
-      {item.type === "sine" && <Sine/>}
-      {item.type === "gate" && <Gate/>}
+    <div style={{
+      position:"absolute",
+      [side]: `calc(max(2%, calc(50% - 380px)) + ${item.x}px)`,
+      top: item.y,
+      transform: `rotate(${item.rot}deg) scale(${item.scale})`,
+      opacity: 0.6,
+    }}>
+      <DoodleContent item={item}/>
     </div>
   );
 }
