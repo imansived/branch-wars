@@ -53,9 +53,16 @@ function Gate(){
   );
 }
 
+// "2% from the viewport edge" is fine up to a point, but on a wide monitor
+// that pins the doodles to the far edges while the board stays a fixed
+// ~300px wide in the middle — a huge dead gap between them. max() picks
+// whichever is larger: 2% keeps them near the edge on narrow screens (where
+// that 2%-vs-380px comparison always favors 2%), and the fixed 380px-from-
+// center clamp pulls them in to hug the board once the viewport is wide
+// enough that 2% would otherwise drift away from it.
 function DoodleItem({ item, side }){
   return (
-    <div style={{ position:"absolute", [side]:"2%", top:item.y, transform:`rotate(${item.rot}deg)`, opacity:0.6 }}>
+    <div style={{ position:"absolute", [side]:"max(2%, calc(50% - 380px))", top:item.y, transform:`rotate(${item.rot}deg)`, opacity:0.6 }}>
       {item.type === "math" && <div style={mathStyle}>{item.text}</div>}
       {item.type === "code" && <div style={codeStyle}>{item.text}</div>}
       {item.type === "notice" && <div style={noticeStyle}>{item.text}</div>}
