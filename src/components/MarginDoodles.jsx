@@ -65,6 +65,10 @@ const LEFT_TEXT = [
   { kind:"label", text:"RECORD CHECKING" },
   { kind:"label", text:"VIVA STARTS NOW" },
   { kind:"quote", text:"“WHY IS IT NOT RUNNING”" },
+  { kind:"label", text:"Backlog detected" },
+  { kind:"code",  text:"Sleep.exe *not found*" },
+  { kind:"label", text:"Practical panic" },
+  { kind:"quote", text:"“Notes? Send pls”" },
 ];
 
 const RIGHT_TEXT = [
@@ -102,6 +106,10 @@ const RIGHT_TEXT = [
   { kind:"code",  text:"WORKING ON MY SYSTEM" },
   { kind:"quote", text:"“IT WORKED YESTERDAY”" },
   { kind:"quote", text:"“SIR IT WAS WORKING”" },
+  { kind:"label", text:"Internals incoming" },
+  { kind:"quote", text:"“Theory? Never heard”" },
+  { kind:"label", text:"Proxy marked" },
+  { kind:"label", text:"*75%* or perish" },
 ];
 
 const DECO_TYPES = ["stain","scribble","star","circuit","sine","gate","arrow","checkbox","rule","dots"];
@@ -378,8 +386,9 @@ const MOBILE_LEFT = [
   { text:"DUE",   y:"57%", rot:6 },
   { icon:"dots",  y:"66%", rot:0, scale:0.7 },
   { text:"LATE!", y:"72%", rot:-5, accent:true },
-  { text:"BUG",   y:"85%", rot:5 },
-  { text:"OOPS",  y:"95%", rot:-6 },
+  { text:"NOTES?", y:"80%", rot:6 },
+  { text:"BUG",   y:"88%", rot:5 },
+  { text:"OOPS",  y:"96%", rot:-6 },
 ];
 
 const MOBILE_RIGHT = [
@@ -392,8 +401,9 @@ const MOBILE_RIGHT = [
   { text:"404",   y:"59%", rot:-5, accent:true },
   { icon:"scribble", y:"68%", rot:0, scale:0.6 },
   { text:"FAIL?", y:"77%", rot:6 },
-  { text:"PASS?", y:"87%", rot:-6, accent:true },
-  { text:"LAB",   y:"96%", rot:5 },
+  { text:"PROXY", y:"85%", rot:5 },
+  { text:"PASS?", y:"92%", rot:-6, accent:true },
+  { text:"LAB",   y:"98%", rot:5 },
 ];
 
 const mobileWordStyle = { fontSize:11, fontFamily:"'DM Sans',sans-serif", color:"#8A6030", fontWeight:800, letterSpacing:0.3 };
