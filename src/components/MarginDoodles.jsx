@@ -362,42 +362,56 @@ function DoodleItem({ item, side }){
 // enough for the desktop system's phrases and boxed notes, whose safe
 // clearance math assumes a much bigger gap. Rather than shrink that same
 // system until it's illegible, this is a deliberately different, much
-// smaller set: short words only (6 chars or less), plain text, no boxes,
-// pinned near the edge at a fixed 2% — at this length they're narrow
-// enough to clear the board there without needing per-item width math.
-// "Readable chaos," not a scaled-down version of the desktop wall of text.
+// smaller set: short words (6 chars or less, plain text, no boxes) mixed
+// with small icon marks — both pinned near the edge at a fixed 2%, which
+// is safe for icons at any size and for words at this length, without
+// needing the desktop system's per-item width math. "Readable chaos," not
+// a scaled-down version of the desktop wall of text — the icons are what
+// make it read as a proper doodle margin instead of just a word list.
 const MOBILE_LEFT = [
-  { text:"ATKT",  y:"6%",  rot:-8 },
-  { text:"72%",   y:"19%", rot:5,  accent:true },
-  { text:"BUNK?", y:"33%", rot:-6 },
-  { text:"DUE",   y:"48%", rot:6 },
-  { text:"LATE!", y:"63%", rot:-5, accent:true },
-  { text:"BUG",   y:"78%", rot:5 },
-  { text:"OOPS",  y:"91%", rot:-6 },
+  { text:"ATKT",  y:"4%",  rot:-8 },
+  { icon:"checkbox", y:"12%", rot:0 },
+  { text:"72%",   y:"25%", rot:5,  accent:true },
+  { icon:"star",  y:"30%", rot:0 },
+  { text:"BUNK?", y:"39%", rot:-6 },
+  { icon:"scribble", y:"48%", rot:0, scale:0.6 },
+  { text:"DUE",   y:"57%", rot:6 },
+  { icon:"dots",  y:"66%", rot:0, scale:0.7 },
+  { text:"LATE!", y:"72%", rot:-5, accent:true },
+  { text:"BUG",   y:"85%", rot:5 },
+  { text:"OOPS",  y:"95%", rot:-6 },
 ];
 
 const MOBILE_RIGHT = [
-  { text:"VIVA",   y:"8%",  rot:7 },
-  { text:"COPY?",  y:"23%", rot:-6 },
-  { text:"KT?",    y:"38%", rot:5 },
-  { text:"404",    y:"53%", rot:-5, accent:true },
-  { text:"FAIL?",  y:"68%", rot:6 },
-  { text:"PASS?",  y:"82%", rot:-6, accent:true },
-  { text:"LAB",    y:"95%", rot:5 },
+  { text:"VIVA",  y:"5%",  rot:7 },
+  { icon:"star",  y:"14%", rot:0 },
+  { text:"COPY?", y:"23%", rot:-6 },
+  { icon:"checkbox", y:"32%", rot:0 },
+  { text:"KT?",   y:"41%", rot:5 },
+  { icon:"arrow", y:"50%", rot:0, scale:0.65 },
+  { text:"404",   y:"59%", rot:-5, accent:true },
+  { icon:"scribble", y:"68%", rot:0, scale:0.6 },
+  { text:"FAIL?", y:"77%", rot:6 },
+  { text:"PASS?", y:"87%", rot:-6, accent:true },
+  { text:"LAB",   y:"96%", rot:5 },
 ];
 
 const mobileWordStyle = { fontSize:11, fontFamily:"'DM Sans',sans-serif", color:"#8A6030", fontWeight:800, letterSpacing:0.3 };
+const MOBILE_ICONS = { checkbox:Checkbox, star:Star, scribble:Scribble, arrow:Arrow, dots:DotGrid };
 
 function MobileDoodleItem({ item, side }){
+  const Icon = item.icon && MOBILE_ICONS[item.icon];
   return (
     <div style={{
       position:"absolute",
       [side]: "2%",
       top: item.y,
-      transform: `rotate(${item.rot}deg)`,
-      opacity: item.accent ? 0.6 : 0.42,
+      transform: `rotate(${item.rot}deg)${item.scale ? ` scale(${item.scale})` : ""}`,
+      opacity: item.accent ? 0.6 : item.icon ? 0.38 : 0.42,
     }}>
-      <div style={item.accent ? { ...mobileWordStyle, color:"#C0392B" } : mobileWordStyle}>{item.text}</div>
+      {Icon
+        ? <Icon/>
+        : <div style={item.accent ? { ...mobileWordStyle, color:"#C0392B" } : mobileWordStyle}>{item.text}</div>}
     </div>
   );
 }
