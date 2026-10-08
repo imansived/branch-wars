@@ -246,13 +246,25 @@ export const SFX = {
            attack:0.002, decay:0.035, sustain:0.08, release:0.06, rev:0.05 });
   },
 
-  // Faculty shuffle: explosive noise + descending glide + low undertone
+  // Faculty shuffle: a soft riffle, not a crash. The board is being
+  // reorganized, not destroyed — a quick cascade of light triangle notes
+  // (like a hand riffling a deck of cards) over a breathy whoosh, settling
+  // on a soft low landing instead of the old sawtooth siren.
   shuffle(){
-    noise({ attack:0.003, release:0.18, peak:0.28, hpFreq:800, lpFreq:7000 });
-    glide({ f0:620, f1:140, type:"sawtooth", peak:0.32,
-            attack:0.010, release:0.36, rev:0.36, delay:0.025 });
-    tone({ freq:80, type:"sine", peak:0.22,
-           attack:0.020, decay:0.14, sustain:0.25, release:0.40, rev:0.20, delay:0.04 });
+    const ctx = getAudioCtx(); if(!ctx) return;
+    const t0 = ctx.currentTime;
+
+    noise({ t0, attack:0.015, release:0.26, peak:0.09, hpFreq:1400, lpFreq:5200 });
+
+    [392, 440, 494, 440, 523].forEach((f, i) => {
+      tone({ freq:f, type:"triangle", t0, peak:0.26,
+             attack:0.004, decay:0.05, sustain:0.2, release:0.12,
+             rev:0.24, delay: i * 0.045 });
+    });
+
+    tone({ freq:110, type:"sine", t0, peak:0.18,
+           attack:0.020, decay:0.12, sustain:0.2, release:0.32,
+           rev:0.18, delay:0.24 });
   },
 
   // Good event: ascending two-note chime
